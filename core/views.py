@@ -81,12 +81,12 @@ def pdf_to_html(request):
                     'cargaSemestral': pdf_instance.cargaSemestral,
                 }
                 secciones = {
-                    'fundamentacion': pdf_instance.fundamentacion,
-                    'objetivos': procesar_lista(pdf_instance.objetivos),
-                    'contenido': pdf_instance.contenido.replace('\n', '<br>'),
-                    'metodologia': procesar_lista(pdf_instance.metodologia),
-                    'evaluacion': pdf_instance.evaluacion.replace('\n', '<br>'),
-                    'bibliografia': procesar_lista(pdf_instance.bibliografia),
+                    'II. FUNDAMENTACION': pdf_instance.fundamentacion,
+                    'III. OBJETIVOS': procesar_lista(pdf_instance.objetivos),
+                    'IV. CONTENIDO': pdf_instance.contenido.replace('\n', '<br>'),
+                    'V. METODOLOGÍA': procesar_lista(pdf_instance.metodologia),
+                    'VI. EVALUACIÓN': pdf_instance.evaluacion.replace('\n', '<br>'),
+                    'VII. BIBLIOGRAFÍA': procesar_lista(pdf_instance.bibliografia),
                 }
                 identificaciones.append({'identificacion': identificacion, 'secciones': secciones})
                 print("Nombre: ", pdf_instance.nombre)

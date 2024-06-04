@@ -8,17 +8,26 @@
     <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
     <script src="{% static 'js/pagedjs_custom.js' %}"></script>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    <style>
+        td{
+            width: 300px;
+        }
+
+    </style>
 </head>
+
 <body>
 
     <!-- Contenedor de la hoja -->
     <div class="sheet-container">
         <!-- Contenido -->
     {% for identificacion_data in identificaciones %}
+    <div class="pdf" id="pdf{{ loop.index }}">
         <div class="content">
             <!-- Contenido de la página 1 -->
             <div class="page">
-                <h2>Identificación</h2>
+                <h2>I. IDENTIFICACIÓN</h2>
 <div class="identification-table">
     <table>
         <tr>
@@ -73,8 +82,21 @@
 
             </div>
         </div>
+    </div>
     {% endfor %}
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const pdfs = document.querySelectorAll('.pdf');
+          let styles = '';
+      
+          pdfs.forEach((pdf, index) => {
+            const pdfNumber = index + 1;
+            console.log(pdfNumber)
+      
+          });
+        });
+      </script>
 
 </body>
 </html>

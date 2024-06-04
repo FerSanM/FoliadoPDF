@@ -12,6 +12,7 @@ body {
 }
 .page-break {
     break-after: page;
+    counter-set: page;
 }
 
 /* Estilos para la página */

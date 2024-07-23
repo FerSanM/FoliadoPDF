@@ -1,15 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Importar PDF</title>
-</head>
-<body>
-    <h1>Importar PDF</h1>
-    <form method="post" enctype="multipart/form-data">
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Importar PDF{% endblock %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data" class="form-cuadrado">
+        <h3>Importar PDF</h3>
         {% csrf_token %}
-        <input type="file" name="pdf_files" multiple>
-        <button type="submit">Importar</button>
+        <label for="formFileMultiple" class="form-label">Selecciona los PDF que quieres importar</label>
+        <input class="form-control" type="file" name="pdf_files" id="formFileMultiple"  multiple>
+        <button type="submit" class="btn-form">Importar</button>
     </form>
-</body>
-</html>
+{% endblock %}

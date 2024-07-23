@@ -8,4 +8,8 @@ urlpatterns = [
     path('carrera-pdf/', views.carrera_pdf_list, name='carrera_pdf_list'),
     path('materiasf/<str:codcarrera>', views.get_materiasf, name='get_materiasf'),
     path('menu', views.menu, name='menu'),
+    path('autoridades', views.autoridades, name='autoridades'),
+    path('listar-autoridades/', views.listar_autoridades, name='listar_autoridades'),
+    path('obtener-autoridad/<int:autoridad_id>/', views.obtener_autoridad, name='obtener_autoridad'),
+    path('editar-autoridad/', views.editar_autoridad, name='editar_autoridad'),
 ]

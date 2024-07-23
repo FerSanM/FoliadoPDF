@@ -6,6 +6,13 @@ class Carrera(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+class Autoridades(models.Model):
+    nombreApellido = models.CharField(max_length=50)
+    cargo = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.nombreApellido 
 
 
 class PDF(models.Model):

@@ -1,10 +1,13 @@
 import pdfplumber
-from django.shortcuts import render, redirect
-from .models import PDF, Carrera
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import PDF, Carrera, Autoridades
 from io import BytesIO
 from unidecode import unidecode
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
+import json
+from django.views.decorators.csrf import csrf_exempt
+import re
 
 
 def import_success(request):
@@ -23,6 +26,63 @@ def carrera_pdf_list(request):
     return render(request, 'carrera_pdf_list.html',
                   {'carreras': carreras, 'pdfs': pdfs, 'selected_carrera_id': selected_carrera_id})
 
+def listar_autoridades(request):
+    autoridades = Autoridades.objects.all()
+    print(autoridades)
+    if autoridades.exists():
+        autoridades_list = list(autoridades.values())  # Serializa el QuerySet a una lista de diccionarios
+        data = {'message': "Success", 'autoridades': autoridades_list}
+    else:
+        data = {'message': "Not Found"}
+    return JsonResponse(data)
+
+def autoridades(request):
+    return render(request,'autoridades.html')
+
+def obtener_autoridad(request, autoridad_id):
+    try:
+        autoridad = get_object_or_404(Autoridades, id=autoridad_id)
+
+        # Preparar los datos del evento para enviar como respuesta JSON
+        data = {
+            'message': 'Success',
+            'autoridad': {
+                'id': autoridad.id,
+                'nombre_autoridad': autoridad.nombreApellido, 
+            }
+        }
+        print(data)
+
+        return JsonResponse(data)
+
+    except Autoridades.DoesNotExist:
+        return JsonResponse({'message': 'Evento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'message': str(e)}, status=500)
+    
+
+@csrf_exempt
+def editar_autoridad(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        autoridad_id = data.get('id')
+        nombre_autoridad = data.get('nombreAutoridad')
+        print(autoridad_id,nombre_autoridad)
+
+        if autoridad_id and nombre_autoridad :
+            try:
+                autoridad = Autoridades.objects.get(id=autoridad_id)
+
+                autoridad.nombreApellido = nombre_autoridad
+
+                autoridad.save()
+
+                return JsonResponse({'message': 'Success'})
+            except Autoridades.DoesNotExist:
+                return JsonResponse({'message': 'Autoridad no encontrado'}, status=400)
+            except ValueError as e:
+                return JsonResponse({'message': f'Error de formato de fecha: {str(e)}'}, status=400)
+    return JsonResponse({'message': 'Método no permitido'}, status=405)
 
 def procesar_lista(contenido):
     # Dividir el contenido en párrafos
@@ -58,9 +118,51 @@ def procesar_lista(contenido):
 
     return html_contenido
 
+def procesar_contenido(contenido):
+    temas = []
+    tema_actual = None
+    subtemas = []
+
+    lines = contenido.split('\n')
+    
+    # Expresiones regulares para temas y subtemas
+    tema_regex = re.compile(r'^\d+\.\s*')  # Detecta temas principales
+    subtema_regex = re.compile(r'^\d+\.\d+\.\s*')  # Detecta subtemas
+
+    for linea in lines:
+        linea = linea.strip()
+        # Debug: imprime cada línea procesada
+        #print(f"Procesando línea: {linea}")
+        
+        if tema_regex.match(linea) and not subtema_regex.match(linea):  # Detectar temas principales
+            if tema_actual:
+                temas.append({
+                    'tema': tema_actual,
+                    'subtemas': subtemas
+                })
+                subtemas = []  # Reiniciar lista de subtemas
+            
+            tema_actual = linea
+            #print(f"Detectado tema: {tema_actual}")
+        
+        elif subtema_regex.match(linea):  # Detectar subtemas
+            if tema_actual:
+                subtemas.append(linea)
+                #print(f"  Detectado subtema: {linea}")
+            
+    if tema_actual:
+        temas.append({
+            'tema': tema_actual,
+            'subtemas': subtemas
+        })
+
+    # Debug: imprime los temas procesados
+    #print(f"Temas procesados: {temas}")
+    return temas
 
 def pdf_to_html(request):
     pdf_ids = request.GET.getlist('pdf_id')
+    autoridades = Autoridades.objects.all()
     print(pdf_ids)  # Obtener lista de IDs de PDF
     if pdf_ids:
         identificaciones = []
@@ -83,7 +185,7 @@ def pdf_to_html(request):
                 secciones = {
                     'II. FUNDAMENTACION': pdf_instance.fundamentacion,
                     'III. OBJETIVOS': procesar_lista(pdf_instance.objetivos),
-                    'IV. CONTENIDO': pdf_instance.contenido.replace('\n', '<br>'),
+                    'IV. CONTENIDO': procesar_contenido(pdf_instance.contenido),
                     'V. METODOLOGÍA': procesar_lista(pdf_instance.metodologia),
                     'VI. EVALUACIÓN': pdf_instance.evaluacion.replace('\n', '<br>'),
                     'VII. BIBLIOGRAFÍA': procesar_lista(pdf_instance.bibliografia),
@@ -97,7 +199,7 @@ def pdf_to_html(request):
         identificaciones.sort(key=lambda x: x['identificacion']['codigo'])
 
         if identificaciones:
-            html_content = render_to_string('pdf_to_html_template.html', {'identificaciones': identificaciones})
+            html_content = render_to_string('pdf_to_html_template.html', {'identificaciones': identificaciones,'autoridades':autoridades})
             return HttpResponse(html_content)
         else:
             return HttpResponse("No se encontraron PDFs con las IDs proporcionadas.")
